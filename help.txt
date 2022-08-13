@@ -1,0 +1,25 @@
+
+
+# install venv
+python -m pip install virtualenv
+
+
+# create a venv
+python -m venv venv
+
+
+
+# activate venv
+win:
+venv\Scripts\activate
+
+mac lin:
+source venv/bin/activate
+
+
+# deactivate virtual environment
+deactivate
+
+
+# install flask
+python -m pip install flask
