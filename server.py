@@ -1,6 +1,7 @@
+from unicodedata import category
 from flask import Flask
 import json
-from data import me
+from data import me, catalog
 
 app = Flask(__name__)
 
@@ -37,6 +38,54 @@ def about_api():
     return json.dumps(me)
 
 
+@app.get("/api/catalog")
+def get_catalog():
+    return json.dumps(catalog)
+    # return the list of products
+
+@app.get('/api/product/<id>')
+def get_product_by_id(id):
+    for prod in catalog:
+        if prod["_id"] == id:
+            return json.dumps(prod)
+
+    return json.dumps("Error: Id not valid")
+
+@app.get("/api/products/<category>")
+def get_product_by_category(category):
+    results = []
+    for prod in catalog:
+        if prod["category"] == category:
+            results.append(prod)
+
+    return json.dumps(results)
 
 
-app.run(debug=True)
+
+@app.get("/api/count")
+def catalog_count(): 
+    count = len(catalog)
+    return json.dumps(count)
+
+@app.get("/api/catalog/total")
+def catalog_total(): 
+    total = 0
+    for prod in catalog:
+        total += prod["price"]
+
+    return json.dumps(total)
+
+# get api/catalog/cheapest
+@app.get("/api/catalog/cheapest")
+def catalog_cheapest(): 
+    cheapest = catalog[0]
+    for prod in catalog:
+         if prod["price"] < cheapest["price"]:
+            cheapest = prod
+
+    return  json.dumps(cheapest)
+
+
+        
+    
+#  app.run(debug=True)
