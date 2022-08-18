@@ -1,6 +1,8 @@
+from lib2to3.pgen2.token import LESSEQUAL
 from unicodedata import category
-from flask import Flask
+from flask import Flask, request, abort
 import json
+import random 
 from data import me, catalog
 
 app = Flask(__name__)
@@ -43,6 +45,31 @@ def get_catalog():
     return json.dumps(catalog)
     # return the list of products
 
+@app.post("/api/catalog")
+def save_product():
+    product = request.get_json()
+    # validating
+    if not "title" in product:
+        return abort(400,"ERROR: Title is required")
+
+    # title must have a tleast five characters
+    if len(product["title"]) < 5:
+        return abort(400,"ERROR: Title must be at least 5 characters")
+
+    # must have a price
+    if not "price" in product:
+        return abort(400,"ERROR: Price is required")
+    # price must be greater than 1
+    if product["price"] < 1:
+        return abort(400,"ERROR: Price must be greater than 1")
+
+    # assign a unique id
+    product["_id"] = random.randint(100,1000000)
+
+    catalog.append(product)
+
+    return product
+
 @app.get('/api/product/<id>')
 def get_product_by_id(id):
     for prod in catalog:
@@ -84,6 +111,77 @@ def catalog_cheapest():
             cheapest = prod
 
     return  json.dumps(cheapest)
+
+# play rock, paper, scissors
+# /api/game/paper
+# return should be a dictionary (as json)
+# {
+#   "you": paper,
+#   "pc": rock,
+#   "winner": you
+# }
+
+# step 1: create endpoint return {"you": rock }
+
+@app.get("/api/game/<pick>")
+def game(pick):
+
+ # random pick
+    num = random.randint(0,2)
+    pc = ""
+    if num == 0:
+        pc = "paper"
+    elif num == 1:
+        pc = "rock"
+    else:
+        pc = "scissors"
+
+    winner = ""
+    if pick == "paper":
+        if pc == "rock":
+            winner = "you"
+        elif pc == "scissors":
+            winner = "pc" 
+        else:
+            winner = "draw"
+
+    elif pick == "rock":
+        if pc == "rock":
+            winner = "draw"
+        elif pc == "scissors":
+            winner = "you" 
+        else:
+            winner = "pc"
+
+    elif pick == "scissors":
+        if pc == "rock":
+            winner = "pc"
+        elif pc == "scissors":
+            winner = "draw" 
+        else:
+            winner = "you"
+
+    results = {
+        "you": pick,
+        "pc": pc,
+        "winner": winner
+    }
+
+
+    return json.dumps(results)
+
+# step 2: generate a random number between 0 and 2
+# change the number to be rock, paper or scissors
+# return 
+# {
+#   "you": paper,
+#   "pc": rock,
+# }
+
+# step 3
+# finish the logic to pick the winner
+
+
 
 
         
