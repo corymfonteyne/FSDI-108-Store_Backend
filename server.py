@@ -1,10 +1,10 @@
-from lib2to3.pgen2.token import LESSEQUAL
-from unicodedata import category
+from math import prod
 from flask import Flask, request, abort
 import json
 import random 
 from data import me, catalog
 from flask_cors import CORS
+from config import db
 
 app = Flask(__name__)
 CORS(app) # diable CORS, anyone can access this API
@@ -31,6 +31,10 @@ def about():
 # APIProducts #
 ###################
 
+def fix_id(obj):
+    obj["_id"] = str(obj["_id"])
+    return obj
+
 @app.get("/api/test")
 def test_api(): 
     return json.dumps("OK")
@@ -43,7 +47,13 @@ def about_api():
 
 @app.get("/api/catalog")
 def get_catalog():
-    return json.dumps(catalog)
+    cursor = db.Products.find({}) # read all products
+    results = []
+    for prod in cursor:
+        prod = fix_id(prod)
+        results.append(prod)
+
+    return json.dumps(results)
     # return the list of products
 
 @app.post("/api/catalog")
@@ -64,12 +74,10 @@ def save_product():
     if product["price"] < 1:
         return abort(400,"ERROR: Price must be greater than 1")
 
-    # assign a unique id
-    product["_id"] = random.randint(100,1000000)
+    db.Products.insert_one(product)
+    print(product) #it should have an _id assigned by the DB
 
-    catalog.append(product)
-
-    return product
+    return json.dumps(product)
 
 @app.get('/api/product/<id>')
 def get_product_by_id(id):
