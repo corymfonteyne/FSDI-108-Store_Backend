@@ -4,9 +4,10 @@ from flask import Flask, request, abort
 import json
 import random 
 from data import me, catalog
+from flask_cors import CORS
 
 app = Flask(__name__)
-
+CORS(app) # diable CORS, anyone can access this API
 
 
 @app.get("/")

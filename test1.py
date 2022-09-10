@@ -1,6 +1,7 @@
 
 from data import me
 
+
 # get data from dictionary
 print(me["first_name"])
 
