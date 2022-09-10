@@ -5,6 +5,7 @@ import random
 from data import me, catalog
 from flask_cors import CORS
 from config import db
+from bson import ObjectId
 
 app = Flask(__name__)
 CORS(app) # diable CORS, anyone can access this API
@@ -81,32 +82,41 @@ def save_product():
 
 @app.get('/api/product/<id>')
 def get_product_by_id(id):
-    for prod in catalog:
-        if prod["_id"] == id:
-            return json.dumps(prod)
 
-    return json.dumps("Error: Id not valid")
+    prod = db.Products.find_one({"_id": ObjectId(id)})
+    prod = fix_id(prod)
+    return json.dumps(prod)
+
 
 @app.get("/api/products/<category>")
-def get_product_by_category(category):
+def get_by_category(category):
+
+    cursor = db.Products.find({})
     results = []
-    for prod in catalog:
-        if prod["category"] == category:
-            results.append(prod)
+    for prod in cursor:
+        prod = fix_id(prod)
+        results.append(prod)
+        
 
     return json.dumps(results)
 
 
 
 @app.get("/api/count")
-def catalog_count(): 
-    count = len(catalog)
+def catalog_count():
+    cursor = db.Products.find({})
+    products = []
+    for prod in cursor:
+        products.append(prod)
+
+    count = len(products)
     return json.dumps(count)
 
 @app.get("/api/catalog/total")
 def catalog_total(): 
     total = 0
-    for prod in catalog:
+    cursor = db.Products.find({})
+    for prod in cursor:
         total += prod["price"]
 
     return json.dumps(total)
@@ -120,6 +130,35 @@ def catalog_cheapest():
             cheapest = prod
 
     return  json.dumps(cheapest)
+
+# create 2 endpoints to save/retreive CouponCodes
+# post/api coupons to save couponCodes
+# get/api coupons to retreive couponCodes
+
+@app.get("/api/coupons")
+def save_coupon():
+    coupon = request.get_json()
+    # validating
+    if not "code" in coupon:
+        abort(400, "code is required")
+
+    if not "discount" in coupon:
+        abort(400, "discount is required")
+
+    db.CouponCodes.insert_one(coupon)
+    coupon = fix_id(coupon)
+    return json.dumps(coupon)
+
+
+@app.get("/api/coupons")
+def get_coupons():
+    cursor = db.CouponCodes.find({})
+    results = []
+    for cp in cursor:
+        cp = fix_id(cp)
+        results.append(cp)
+
+    return json.dumps(results)
 
 # play rock, paper, scissors
 # /api/game/paper
